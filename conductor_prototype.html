@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Conductor Simulator — Arch Edition</title>
+    <title>Conductor Simulator — Grid Layout Edition</title>
     <style>
         * {
             margin: 0;
@@ -18,39 +18,33 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            padding: 16px;
+            padding: 12px;
         }
         #game {
             width: 100%;
-            max-width: 1150px;
+            max-width: 1300px;
             background: #12121a;
             border: 1px solid #2a2a3a;
             border-radius: 16px;
-            padding: 20px;
+            padding: 16px;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
             position: relative;
-            min-height: 600px;
+            min-height: 650px;
         }
         .screen {
             display: none;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
             animation: fadeIn .4s ease;
         }
         .screen.active {
             display: flex;
         }
         @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         /* Song Selection */
@@ -94,592 +88,439 @@
             border-color: #2a5a3a;
             background: #1a2a1e;
         }
-        .song-card .song-icon {
-            font-size: 2.5rem;
-            text-align: center;
-        }
-        .song-card .song-name {
-            font-size: 1.1rem;
-            font-weight: 700;
-            text-align: center;
-        }
-        .song-card .song-desc {
-            font-size: .8rem;
-            color: #8a8a9a;
-            text-align: center;
-            line-height: 1.4;
-        }
-        .song-card .song-status {
-            text-align: center;
-            font-size: .75rem;
-            font-weight: 700;
-            padding: 4px 10px;
-            border-radius: 12px;
-            background: #2a2a3a;
-            color: #8a8a9a;
-        }
-        .song-card.completed .song-status {
-            background: #2a5a3a;
-            color: #a0d4a0;
-        }
-        .song-card .checkmark {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            font-size: 1.4rem;
-            color: #4ade80;
-        }
-        #concert-progress {
-            text-align: center;
-            font-size: .9rem;
-            color: #6a6a8a;
-            margin-top: 4px;
-        }
+        .song-card .song-icon { font-size: 2.5rem; text-align: center; }
+        .song-card .song-name { font-size: 1.1rem; font-weight: 700; text-align: center; }
+        .song-card .song-desc { font-size: .8rem; color: #8a8a9a; text-align: center; line-height: 1.4; }
+        .song-card .song-status { text-align: center; font-size: .75rem; font-weight: 700; padding: 4px 10px; border-radius: 12px; background: #2a2a3a; color: #8a8a9a; }
+        .song-card.completed .song-status { background: #2a5a3a; color: #a0d4a0; }
+        .song-card .checkmark { position: absolute; top: 8px; right: 8px; font-size: 1.4rem; color: #4ade80; }
+        #concert-progress { text-align: center; font-size: .9rem; color: #6a6a8a; margin-top: 4px; }
 
         /* Gameplay Layout */
-        #piece-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-bottom: 8px;
-            border-bottom: 1px solid #2a2a3a;
-        }
-        #piece-title {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: #e8d5a0;
-        }
-        #piece-status {
-            font-size: .85rem;
-            color: #6a6a8a;
-        }
+        #piece-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 6px; border-bottom: 1px solid #2a2a3a; flex-wrap: wrap; gap: 6px; }
+        .title-group { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        #piece-title { font-size: 1.25rem; font-weight: 700; color: #e8d5a0; }
+        .badge-header { color: #e8d5a0; font-size: 0.8rem; font-weight: 700; background: #1a1a2a; padding: 4px 10px; border-radius: 6px; border: 1px solid #2a2a3a; }
+        #piece-status { font-size: .85rem; color: #6a6a8a; }
 
         /* Progress Bar */
-        #progress-wrap {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-top: 2px;
-        }
-        #progress-label {
-            font-size: .7rem;
-            color: #8a8a9a;
-            text-transform: uppercase;
-            letter-spacing: .06em;
-            font-weight: 700;
-            white-space: nowrap;
-        }
-        #progress-track {
-            flex: 1;
-            height: 20px;
-            background: #1a1a2a;
-            border-radius: 5px;
-            overflow: hidden;
-            border: 1px solid #2a2a3a;
-            position: relative;
-        }
-        #progress-fill {
-            height: 100%;
-            width: 0%;
-            background-color: #facc15;
-            border-radius: 5px;
-            transition: width .3s linear, background-color .4s ease;
-        }
-        #progress-pct {
-            font-size: .7rem;
-            color: #e8d5a0;
-            font-weight: 700;
-            width: 36px;
-            text-align: right;
-        }
-        #pause-btn {
-            background: #2a2a3a;
-            border: 1px solid #3a3a5a;
-            color: #e8e6e3;
-            width: 28px;
-            height: 28px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: .8rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all .2s;
-        }
-        #pause-btn:hover {
-            background: #3a3a5a;
-        }
-        #pause-btn.paused {
-            background: #c4a35a;
-            color: #0a0a0f;
-            border-color: #c4a35a;
+        #progress-wrap { display: flex; align-items: center; gap: 10px; }
+        #progress-label { font-size: .7rem; color: #8a8a9a; text-transform: uppercase; letter-spacing: .06em; font-weight: 700; white-space: nowrap; }
+        #progress-track { flex: 1; height: 18px; background: #1a1a2a; border-radius: 5px; overflow: hidden; border: 1px solid #2a2a3a; position: relative; }
+        #progress-fill { height: 100%; width: 0%; background-color: #facc15; border-radius: 5px; transition: width .3s linear, background-color .4s ease; }
+        #progress-pct { font-size: .7rem; color: #e8d5a0; font-weight: 700; width: 36px; text-align: right; }
+        #pause-btn { background: #2a2a3a; border: 1px solid #3a3a5a; color: #e8e6e3; width: 26px; height: 26px; border-radius: 6px; cursor: pointer; font-size: .8rem; display: flex; align-items: center; justify-content: center; transition: all .2s; }
+        #pause-btn:hover { background: #3a3a5a; }
+        #pause-btn.paused { background: #c4a35a; color: #0a0a0f; border-color: #c4a35a; }
+
+        .layout-split { display: flex; gap: 12px; align-items: stretch; position: relative; }
+        .main-column { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+        .guide-column { width: 300px; flex-shrink: 0; background: #161622; border: 1px solid #2a2a3a; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px; transition: all .3s ease; overflow: hidden; }
+        .guide-column.collapsed { width: 0; padding: 0; border: none; opacity: 0; overflow: hidden; }
+        #guide-toggle { position: absolute; top: -4px; right: -4px; z-index: 20; background: #2a2a3a; border: 1px solid #3a3a5a; color: #a0a0b0; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; transition: all .2s; }
+        #guide-toggle:hover { background: #3a3a5a; color: #e8e6e3; }
+
+        /* Status Grid */
+        #status-grid-container { background: #161622; border: 1px solid #2a2a3a; border-radius: 10px; padding: 8px; display: flex; flex-direction: column; gap: 5px; }
+        .status-row { display: flex; align-items: stretch; border: 2px solid #000; border-radius: 6px; overflow: hidden; }
+        .row-header { background: #1a1a2a; color: #e8d5a0; font-weight: 800; font-size: .75rem; display: flex; align-items: center; justify-content: center; text-align: center; padding: 5px; width: 110px; border-right: 2px solid #000; text-transform: uppercase; }
+        .grid-cells { display: flex; flex: 1; }
+        .cell { flex: 1; background: #b0b0b0; color: #111; font-size: .65rem; font-weight: 700; display: flex; align-items: center; justify-content: center; text-align: center; padding: 5px 2px; border-right: 2px solid #000; transition: all .3s ease; line-height: 1.2; }
+        .cell:last-child { border-right: none; }
+        .cell.active { transform: scale(1.02); box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2); z-index: 2; }
+        .row-audience .cell.active.bad { background: #ef4444; color: #fff; }
+        .row-audience .cell.active.mid { background: #facc15; color: #000; }
+        .row-audience .cell.active.good { background: #84cc16; color: #000; }
+        .row-synergy .cell.active.bad { background: #ef4444; color: #fff; }
+        .row-synergy .cell.active.mid { background: #a3a3a3; color: #000; }
+        .row-synergy .cell.active.good { background: #22c55e; color: #fff; }
+
+        /* Stage Container & Standard Grid Layout - Closer and Larger */
+        #stage-container { background: #12121a; border: 1px solid #2a2a3a; border-radius: 12px; position: relative; min-height: 460px; overflow: hidden; display: flex; flex-direction: column; }
+        
+        #timeline-container { position: relative; width: 100%; height: 65px; background: #0d0d14; border-bottom: 2px solid #2a2a3a; overflow: hidden; z-index: 10; flex-shrink: 0; pointer-events: none; }
+        
+        #timeline-target-zone { 
+            position: absolute; 
+            top: 0; 
+            left: 190px; 
+            width: 120px; 
+            height: 100%; 
+            background: rgba(34, 197, 94, 0.2); 
+            border-left: 2px solid #22c55e; 
+            border-right: 2px solid #22c55e; 
+            z-index: 5; 
+            box-shadow: inset 0 0 15px rgba(34, 197, 94, 0.3); 
         }
 
-        .layout-split {
-            display: flex;
-            gap: 16px;
-            align-items: stretch;
-            position: relative;
-        }
-        .main-column {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            transition: flex .3s ease;
-        }
-        .guide-column {
-            width: 300px;
-            flex-shrink: 0;
-            background: #161622;
-            border: 1px solid #2a2a3a;
-            border-radius: 12px;
-            padding: 14px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            transition: all .3s ease;
-            overflow: hidden;
-        }
-        .guide-column.collapsed {
-            width: 0;
-            padding: 0;
-            border: none;
-            opacity: 0;
-            overflow: hidden;
-        }
-        #guide-toggle {
-            position: absolute;
-            top: -4px;
-            right: -4px;
-            z-index: 20;
-            background: #2a2a3a;
-            border: 1px solid #3a3a5a;
-            color: #a0a0b0;
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1rem;
+        .timeline-label { position: absolute; top: 4px; left: 8px; font-size: 0.65rem; color: #6a6a8a; font-weight: 800; text-transform: uppercase; z-index: 12; }
+        
+        #timeline-events-layer { position: relative; width: 100%; height: 100%; pointer-events: none; }
+        .timeline-event { 
+            position: absolute; 
+            top: 50%; 
+            transform: translateY(-50%); 
+            background: #26261f; 
+            border: 2px solid #facc15; 
+            padding: 5px 10px; 
+            border-radius: 8px; 
+            font-size: 1.0rem; 
+            font-weight: 900; 
+            color: #fef08a; 
+            z-index: 10; 
+            white-space: nowrap; 
+            pointer-events: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+            letter-spacing: 0.05em;
             display: flex;
             align-items: center;
-            justify-content: center;
-            transition: all .2s;
+            gap: 6px;
+            transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
         }
-        #guide-toggle:hover {
-            background: #3a3a5a;
-            color: #e8e6e3;
+        .timeline-section-label {
+            font-size: 0.7rem;
+            color: #cbd5e1;
+            font-weight: 700;
+            background: #1a1a24;
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid #3a3a5a;
         }
 
-        /* Status Grid — from newer game */
-        #status-grid-container {
-            background: #161622;
-            border: 1px solid #2a2a3a;
+        .orchestra-grid { display: grid; grid-template-columns: 210px 1fr; gap: 8px; padding: 8px; flex: 1; align-items: stretch; background: #161622; border: 1px solid #2a2a3a; border-radius: 10px; overflow: hidden; }
+        
+        .tempo-column { display: flex; flex-direction: column; gap: 6px; background: #161622; border-right: 1px solid #2a2a3a; padding: 6px; justify-content: flex-start; }
+        .tempo-col-title { font-size: 0.7rem; color: #e8d5a0; font-weight: 800; text-transform: uppercase; text-align: center; margin-bottom: 2px; letter-spacing: .05em; display: flex; align-items: center; justify-content: center; gap: 4px; }
+        
+        .grid-tempo-btn { 
+            border: 1px solid #3a3a5a; 
+            color: #fff; 
+            border-radius: 8px; 
+            padding: 7px; 
+            font-size: .75rem; 
+            font-weight: 700; 
+            cursor: pointer; 
+            transition: all 0.25s ease; 
+            text-align: center; 
+            width: 100%; 
+            position: relative;
+            overflow: hidden;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+        }
+        .grid-tempo-btn:hover { 
+            filter: brightness(1.2);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+        .grid-tempo-btn.active { 
+            border-color: #fff; 
+            box-shadow: 0 0 15px rgba(250, 204, 21, 0.8);
+            animation: tempoGlowPulse 1.5s infinite alternate;
+            font-weight: 800;
+        }
+        @keyframes tempoGlowPulse {
+            from { box-shadow: 0 0 8px rgba(250, 204, 21, 0.4); transform: scale(1); }
+            to { box-shadow: 0 0 18px rgba(250, 204, 21, 0.9); transform: scale(1.02); }
+        }
+
+        .podium-crescendo-row { display: flex; width: 100%; height:42px; gap: 4px; margin-top: 2px; }
+        .podium-cres-btn { 
+            flex: 1; 
+            font-size: 0.65rem; 
+            font-weight: 700; 
+            padding: 5px 0; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            text-align: center; 
+            transition: all 0.2s;
+        }
+        .podium-cres-btn.decresc {
+            background: linear-gradient(145deg, #161a24, #1e2638);
+            border: 1px solid #2e3b55;
+            color: #93c5fd;
+        }
+        .podium-cres-btn.decresc:hover {
+            background: linear-gradient(145deg, #1e2638, #283552);
+            border-color: #3b82f6;
+            color: #bfdbfe;
+        }
+        .podium-cres-btn.cresc {
+            background: linear-gradient(145deg, #241f16, #382e1e);
+            border: 1px solid #55442e;
+            color: #fde047;
+        }
+        .podium-cres-btn.cresc:hover {
+            background: linear-gradient(145deg, #382e1e, #524228);
+            border-color: #eab308;
+            color: #fef08a;
+        }
+
+        /* Expanded Bottom Podium Panel for Maestro's Momentum (2 lines), Prestige, and Much Bigger Click Box */
+        .podium-bottom-panel {
+            margin-top: auto;
+            flex: 1;
+            background: linear-gradient(145deg, #14141f, #1a1a2e);
+            border: 2px solid #2a2a3a;
             border-radius: 10px;
             padding: 10px;
             display: flex;
             flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
             gap: 6px;
-        }
-        .status-row {
-            display: flex;
-            align-items: stretch;
-            border: 2px solid #000;
-            border-radius: 6px;
-            overflow: hidden;
-        }
-        .row-header {
-            background: #1a1a2a;
-            color: #e8d5a0;
-            font-weight: 800;
-            font-size: .78rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 6px;
-            width: 120px;
-            border-right: 2px solid #000;
-            text-transform: uppercase;
-        }
-        .grid-cells {
-            display: flex;
-            flex: 1;
-        }
-        .cell {
-            flex: 1;
-            background: #b0b0b0;
-            color: #111;
-            font-size: .68rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 6px 3px;
-            border-right: 2px solid #000;
-            transition: all .3s ease;
-            line-height: 1.2;
-        }
-        .cell:last-child {
-            border-right: none;
-        }
-        .cell.active {
-            transform: scale(1.02);
-            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
-            z-index: 2;
-        }
-        .row-audience .cell.active.bad {
-            background: #ef4444;
-            color: #fff;
-        }
-        .row-audience .cell.active.mid {
-            background: #facc15;
-            color: #000;
-        }
-        .row-audience .cell.active.good {
-            background: #84cc16;
-            color: #000;
-        }
-        .row-synergy .cell.active.bad {
-            background: #ef4444;
-            color: #fff;
-        }
-        .row-synergy .cell.active.mid {
-            background: #a3a3a3;
-            color: #000;
-        }
-        .row-synergy .cell.active.good {
-            background: #22c55e;
-            color: #fff;
-        }
-
-        /* Stage — Arch Layout (radius reduced to 160) */
-        #stage-container {
-            background: #12121a;
-            border: 1px solid #2a2a3a;
-            border-radius: 12px;
             position: relative;
-            height: 400px;
             overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-top: 2px;
-        }
-
-
-.arch-layer{gap: 12px; position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:100%;height:100%;pointer-events:none}
-.arch-item{position:absolute;transform:translate(-50%, 50%);pointer-events:auto}
-
-        /* Musician — from older game, radius-adjusted */
-        .musician {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 3px;
-            padding: 7px;
-            border-radius: 10px;
-            background: #1a1a2a;
-            border: 1px solid #2a2a3a;
-            transition: all .2s;
-            opacity: .45;
-            filter: grayscale(1);
+            transition: all 0.3s ease;
             cursor: pointer;
-            width: 88px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-            position: absolute;
+            min-height: 130px;
         }
-        .musician:hover {
-            background: #2a2a3a;
-            opacity: .75;
-            z-index: 20;
+        .podium-bottom-panel.ready-highlight {
+            border-color: #facc15;
+            box-shadow: inset 0 0 15px rgba(250, 204, 21, 0.4), 0 0 15px rgba(250, 204, 21, 0.3);
+            animation: panelReadyGlow 1.5s infinite alternate;
         }
-        .musician.active {
-            opacity: 1;
-            filter: grayscale(0);
-            border-color: #4a4a6a;
-            background: #1e1e2e;
-            box-shadow: 0 0 15px rgba(138, 138, 202, .2);
+        @keyframes panelReadyGlow {
+            from { border-color: #ca8a04; box-shadow: inset 0 0 10px rgba(250, 204, 21, 0.2); }
+            to { border-color: #facc15; box-shadow: inset 0 0 20px rgba(250, 204, 21, 0.6), 0 0 20px rgba(250, 204, 21, 0.5); }
         }
-        .musician .icon {
-            font-size: 1.5rem;
-        }
-        .musician .name {
-            font-size: .6rem;
-            color: #e8e6e3;
-            font-weight: 700;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            width: 100%;
+
+        .podium-bottom-title {
+            font-size: 0.68rem;
+            color: #e8d5a0;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: .08em;
             text-align: center;
-        }
-        .fatigue-wrap {
+            text-shadow: 0 1px 2px rgba(0,0,0,0.8);
             width: 100%;
-            height: 3px;
-            background: #111;
-            border-radius: 2px;
-            overflow: hidden;
-            margin-top: 1px;
-        }
-        .fatigue-bar {
-            height: 100%;
-            background: #4ade80;
-            width: 0%;
-            transition: all .5s linear;
-        }
-        .mute-icon {
-            position: absolute;
-            top: -6px;
-            right: -6px;
-            font-size: .8rem;
-            background: #111;
-            border-radius: 50%;
-            padding: 2px;
-            display: block;
-            z-index: 5;
-        }
-        .musician.active .mute-icon {
-            display: none;
+            line-height: 1.2;
+            white-space: normal;
         }
 
-        /* Event Badge on Musician */
-        .event-badge {
-            position: absolute;
-            top: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: linear-gradient(145deg, #c4a35a, #e8d5a0);
-            color: #0a0a0f;
-            font-size: .6rem;
-            font-weight: 800;
-            padding: 2px 8px;
-            border-radius: 10px;
-            white-space: nowrap;
-            animation: glowPulse 1s infinite alternate;
-            z-index: 15;
-            box-shadow: 0 2px 8px rgba(232, 213, 160, 0.5);
-            pointer-events: none;
-        }
-        .event-badge.danger {
-            background: linear-gradient(145deg, #e85a5a, #ff8a8a);
-            box-shadow: 0 2px 8px rgba(232, 90, 90, 0.5);
-            animation: glowPulseAlert .5s infinite alternate;
-        }
-        @keyframes glowPulse {
-            from {
-                transform: translateX(-50%) scale(1);
-                box-shadow: 0 0 5px rgba(232, 213, 160, 0.4);
-            }
-            to {
-                transform: translateX(-50%) scale(1.05);
-                box-shadow: 0 0 15px rgba(232, 213, 160, 0.8);
-            }
-        }
-        @keyframes glowPulseAlert {
-            from {
-                transform: translateX(-50%) scale(1);
-                box-shadow: 0 0 5px rgba(232, 90, 90, 0.4);
-            }
-            to {
-                transform: translateX(-50%) scale(1.08);
-                box-shadow: 0 0 20px rgba(232, 90, 90, 0.9);
-            }
-        }
-
-        /* Tempo Buttons — Arch style from older game */
-        .tempo-btn {
-		letter-spacing: 1.5px;
-            background: #2a2a3a;
-            border: 1px solid #3a3a5a;
-            color: #a0a0b0;
-            border-radius: 20px;
-            padding: 6px 12px;
-            font-size: .7rem;
+        .podium-prestige-display {
+            font-size: 0.75rem;
             font-weight: 700;
-            cursor: pointer;
-            transition: all .2s;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
-            position: absolute;
-            transform: translate(-75%, 75%);
+            color: #d4b15c;
+            background: transparent;
+            border: none;
+            padding: 0;
+            box-shadow: none;
+            text-align: center;
+            letter-spacing: 0.05em;
+            width: 100%;
+            transition: all 0.3s ease;
         }
-        .tempo-btn:hover {
-            background: #3a3a5a;
-            color: #e8e6e3;
+        @keyframes prestigeRankUp {
+            0% { transform: scale(1); color: #e8d5a0; text-shadow: 0 0 5px rgba(250,204,21,0.3); }
+            50% { transform: scale(1.15); color: #fff; text-shadow: 0 0 20px #facc15, 0 0 30px #f59e0b; }
+            100% { transform: scale(1); color: #e8d5a0; text-shadow: 0 0 5px rgba(250,204,21,0.3); }
         }
-        .tempo-btn.active {
-            background: linear-gradient(145deg, #4a4a7a, #6a6a9a);
-            color: #fff;
-            border-color: #8a8aca;
-            box-shadow: 0 0 10px rgba(138, 138, 202, .5);
-            transform: translate(-50%, 50%) scale(1.1);
+        .prestige-animate {
+            animation: prestigeRankUp 0.8s ease-in-out;
         }
 
-        /* Podium */
-        #podium {
-            position: absolute;
-            bottom: 12px;
-            left: 50%;
-            transform: translateX(-50%);
+        .podium-momentum-wrap {
+            width: 100%;
+            background: #0d0d14;
+            border: 1px solid #3a3a5a;
+            border-radius: 6px;
+            height: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+        .podium-momentum-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #ca8a04, #facc15);
+            transition: width 0.3s ease;
+            box-shadow: 0 0 8px #facc15;
+        }
+
+        .baton-frame {
+            border: 2px solid transparent;
+            border-radius: 8px;
+            padding: 2px;
             display: flex;
-            flex-direction: column;
             align-items: center;
-            z-index: 5;
+            justify-content: center;
+            transition: all 0.3s ease;
         }
-        #podium .baton-svg {
-            font-size: 2.2rem;
-            filter: drop-shadow(0 0 5px rgba(232, 213, 160, 0.5));
-            animation: conduct 2s infinite ease-in-out;
-            transform-origin: bottom center;
+        .baton-frame.ready {
+            border-color: #facc15;
+            box-shadow: 0 0 12px rgba(250, 204, 21, 0.6);
+            animation: batonBorderPulse 1s infinite alternate;
         }
-        @keyframes conduct {
-            0% {
-                transform: rotate(-15deg);
-            }
-            50% {
-                transform: rotate(15deg);
-            }
-            100% {
-                transform: rotate(-15deg);
-            }
+        @keyframes batonBorderPulse {
+            from { border-color: #ca8a04; box-shadow: 0 0 6px rgba(250, 204, 21, 0.4); }
+            to { border-color: #facc15; box-shadow: 0 0 16px rgba(250, 204, 21, 0.9); }
+        }
+
+        .podium-baton-icon {
+            cursor: pointer;
+            filter: drop-shadow(0 0 2px rgba(0,0,0,0.8));
+            opacity: 0.8;
+            margin-bottom: -5px;
+        }
+        .podium-baton-icon.ready {
+            opacity: 1;
+            filter: drop-shadow(0 0 10px #facc15);
+        }
+
+        /* Instruments Horizontal Multi-column Area - Closer & Larger to fill space */
+        .instruments-column { display: flex; flex-direction: column; gap: 6px; background: #161622; padding: 6px; flex: 1; }
+        .instruments-col-title { font-size: 0.7rem; color: #8a8a9a; font-weight: 800; text-transform: uppercase; margin-bottom: 2px; letter-spacing: .05em; display: flex; justify-content: space-between; align-items: center; }
+        
+        .instruments-grid-wrap { 
+            display: grid; 
+            grid-auto-flow: column;
+            grid-template-rows: repeat(2, minmax(135px, auto));
+            grid-auto-columns: 205px;
+            gap: 10px; 
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+
+        .musician { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px; border-radius: 10px; background: #1a1a2a; border: 1px solid #2a2a3a; transition: all .2s; position: relative; width: 205px; flex-shrink: 0; }
+        .musician:hover { border-color: #4a4a7a; z-index: 5; }
+        
+        @keyframes boxProcessingFlash {
+            0% { border-color: #facc15; box-shadow: 0 0 5px #facc15; }
+            50% { border-color: #ffffff; box-shadow: 0 0 20px #facc15; background: #252538; }
+            100% { border-color: #facc15; box-shadow: 0 0 5px #facc15; }
+        }
+        .dyn-strip.in-challenge {
+            animation: boxProcessingFlash 0.8s infinite ease-in-out;
+            border-color: #facc15 !important;
+        }
+
+        @keyframes successPulse {
+            0% { transform: scale(1); border-color: #22c55e; box-shadow: 0 0 10px #22c55e; background: #162a1e; }
+            50% { transform: scale(1.03); border-color: #4ade80; box-shadow: 0 0 25px #4ade80; background: #1e3a24; }
+            100% { transform: scale(1); border-color: #333; box-shadow: none; background: #111; }
+        }
+        .dyn-strip.challenge-success {
+            animation: successPulse 1.2s ease;
+        }
+
+        @keyframes failShake {
+            0%, 100% { transform: translateX(0); border-color: #ef4444; background: #2a1a1a; }
+            20%, 60% { transform: translateX(-4px); border-color: #ef4444; }
+            40%, 80% { transform: translateX(4px); border-color: #ef4444; }
+        }
+        .dyn-strip.challenge-fail {
+            animation: failShake 0.6s ease;
+        }
+
+        .musician .mus-header { display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 6px; }
+        .mus-title-group { display: flex; align-items: center; gap: 6px; flex: 1; overflow: hidden; }
+        .musician .icon { font-size: 1.2rem; flex-shrink: 0; }
+        .musician .name { font-size: .8rem; color: #e8e6e3; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        .btn-rest { 
+            width: 40px; 
+            height: 40px; 
+            background: #2a2a3a; 
+            border: 1px solid #4a4a6a; 
+            border-radius: 6px; 
+            font-size: 1.1rem; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer; 
+            color: #888;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .btn-rest:hover { background: #3b82f6; color: #fff; border-color: #60a5fa; box-shadow: 0 0 8px rgba(59, 130, 246, 0.5); }
+        .btn-rest.active { background: #3b82f6; color: #fff; border-color: #60a5fa; font-weight: 800; box-shadow: 0 0 8px rgba(59, 130, 246, 0.6); }
+
+        .dyn-strip { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 38px 38px;
+            gap: 4px;
+            width: 100%;
+            background: #111; 
+            border-radius: 6px; 
+            padding: 4px;
+            border: 1px solid #333; 
+            transition: border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+        }
+        .dyn-btn { 
+            width: 100%;
+            height: 100%;
+            background: #222; 
+            color: #888; 
+            font-size: 0.8rem; 
+            font-weight: 700; 
+            text-align: center; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer; 
+            border-radius: 4px;
+            transition: all 0.15s; 
+            border: 1px solid transparent;
+        }
+        .dyn-btn:hover { background: #333; color: #fff; }
+        .dyn-btn.active { background: #84cc16; color: #000; font-weight: 800; box-shadow: inset 0 0 5px rgba(0,0,0,0.5); }
+        
+        .btn-p { grid-column: 1; grid-row: 1; }
+        .btn-mf { grid-column: 2; grid-row: 1; }
+        .btn-f { grid-column: 1; grid-row: 2; }
+        .btn-fff { grid-column: 2; grid-row: 2; }
+
+        .fatigue-container {
+            display: flex;
+            gap: 2px;
+            width: 100%;
+            height: 12px;
+            background: #0d0d12;
+            border-radius: 5px;
+            padding: 2px;
+            border: 1px solid #2a2a3a;
+            transition: all 0.2s ease;
+        }
+        .fatigue-container.selectable-target {
+            border-color: #facc15 !important;
+            box-shadow: 0 0 12px rgba(250, 204, 21, 0.6);
+            animation: pulseCard 1s infinite alternate;
+            cursor: pointer;
+        }
+        @keyframes pulseCard {
+            from { transform: scale(1); }
+            to { transform: scale(1.02); }
+        }
+
+        .fatigue-segment {
+            flex: 1;
+            height: 100%;
+            background: #1e1e2e;
+            border-radius: 2px;
+            transition: background 0.3s ease, box-shadow 0.3s ease;
         }
 
         /* Guide Sidebar */
-        .guide-header {
-            font-size: 1rem;
-            color: #e8d5a0;
-            font-weight: 800;
-            border-bottom: 1px solid #2a2a3a;
-            padding-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: .05em;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .guide-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            overflow-y: auto;
-            padding-right: 4px;
-            flex: 1;
-        }
-        .guide-item {
-            background: #1a1a2a;
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid #2a2a3a;
-            font-size: .85rem;
-            color: #d0d0e0;
-            line-height: 1.4;
-            display: flex;
-            gap: 8px;
-            align-items: flex-start;
-        }
-        .guide-item .guide-icon {
-            font-size: 1.6rem;
-            flex-shrink: 0;
-        }
-        .guide-item-text strong {
-            color: #fff;
-            font-size: .9rem;
-            display: block;
-            margin-bottom: 2px;
-        }
-        .guide-item-text .guide-tag {
-            font-size: .6rem;
-            padding: 1px 6px;
-            border-radius: 4px;
-            font-weight: 700;
-            width: fit-content;
-            display: inline-block;
-            margin-bottom: 2px;
-        }
-        .guide-tag.tuning {
-            background: rgba(196, 163, 90, 0.2);
-            color: #e8d5a0;
-        }
-        .guide-tag.dynamics {
-            background: rgba(138, 90, 196, 0.2);
-            color: #c4a0e8;
-        }
+        .guide-header { font-size: 1rem; color: #e8d5a0; font-weight: 800; border-bottom: 1px solid #2a2a3a; padding-bottom: 8px; text-transform: uppercase; letter-spacing: .05em; display: flex; justify-content: space-between; align-items: center; }
+        .guide-list { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; padding-right: 4px; flex: 1; }
+        .guide-item { background: #1a1a2a; padding: 10px; border-radius: 8px; border: 1px solid #2a2a3a; font-size: .85rem; color: #d0d0e0; line-height: 1.4; display: flex; gap: 8px; align-items: flex-start; }
+        .guide-item .guide-icon { font-size: 1.6rem; flex-shrink: 0; }
+        .guide-item-text strong { color: #fff; font-size: .9rem; display: block; margin-bottom: 2px; }
 
         /* Status */
-        #status {
-            text-align: center;
-            font-size: 1.3rem;
-            color: #e8d5a0;
-            min-height: 1.2em;
-            font-weight: 600;
-			    border: 1px solid #2a2a3a;
-    border-radius: 12px;
-	padding:10px;
-	
-        }
-        #audio-status {
-            text-align: center;
-            font-size: .7rem;
-            color: #4a7a4a;
-            min-height: 1em;
-            opacity: 0;
-        }
-
+        #status { text-align: center; font-size: 1.05rem; color: #e8d5a0; min-height: 1.2em; font-weight: 600; border: 1px solid #2a2a3a; border-radius: 12px; padding: 6px; }
+        
         /* Result Screens */
-        #result-screen,
-        #concert-complete-screen {
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            gap: 18px;
-        }
-        #result-screen h2,
-        #concert-complete-screen h2 {
-            font-size: 2.2rem;
-        }
-        #result-screen p,
-        #concert-complete-screen p {
-            color: #8a8a9a;
-            max-width: 400px;
-            line-height: 1.5;
-            font-size: 1rem;
-        }
-        .result-stats {
-            background: #1a1a2a;
-            border-radius: 10px;
-            padding: 14px 22px;
-            font-size: .95rem;
-            color: #a0a0b0;
-        }
-        .result-btn,
-        .encore-btn {
-            background: #2a2a4a;
-            border: 1px solid #4a4a7a;
-            color: #e0e0ff;
-            padding: 12px 32px;
-            border-radius: 24px;
-            font-size: 1rem;
-            font-weight: 700;
-            cursor: pointer;
-            font-family: inherit;
-            transition: all .2s;
-        }
-        .result-btn:hover,
-        .encore-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 20px rgba(138, 138, 202, .2);
-        }
-        .encore-btn {
-            background: linear-gradient(145deg, #c4a35a, #e8d5a0);
-            color: #0a0a0f;
-            border: none;
-        }
+        #result-screen, #concert-complete-screen { align-items: center; justify-content: center; text-align: center; gap: 18px; }
+        #result-screen h2, #concert-complete-screen h2 { font-size: 2.2rem; }
+        #result-screen p, #concert-complete-screen p { color: #8a8a9a; max-width: 400px; line-height: 1.5; font-size: 1rem; }
+        .result-stats { background: #1a1a2a; border-radius: 10px; padding: 14px 22px; font-size: .95rem; color: #a0a0b0; }
+        .result-btn, .encore-btn { background: #2a2a4a; border: 1px solid #4a4a7a; color: #e0e0ff; padding: 12px 32px; border-radius: 24px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: all .2s; }
+        .result-btn:hover, .encore-btn:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(138, 138, 202, .2); }
+        .encore-btn { background: linear-gradient(145deg, #c4a35a, #e8d5a0); color: #0a0a0f; border: none; }
     </style>
-    <base target="_blank">
 </head>
 <body>
-
     <div id="game">
         <!-- SONG SELECTION -->
         <div class="screen active" id="song-select-screen">
@@ -689,19 +530,19 @@
                 <div class="song-card" id="card-canon" onclick="selectSong('canon')">
                     <span class="song-icon">📜</span>
                     <span class="song-name">Canon in D</span>
-                    <span class="song-desc">A gentle introduction to stage balance.</span>
+                    <span class="song-desc">Balanced harmony across sections.<br/><br/><em>Target Tempo: Andante</em><br/><em>Target Dynamic: mf</em></span>
                     <span class="song-status" id="status-canon">Not performed</span>
                 </div>
                 <div class="song-card" id="card-air" onclick="selectSong('air')">
                     <span class="song-icon">🎻</span>
                     <span class="song-name">Air on the G String</span>
-                    <span class="song-desc">Requires delicate stamina management.</span>
+                    <span class="song-desc">Smooth, gentle string expression.<br/><br/><em>Target Tempo: Largo</em><br/><em>Target Dynamic: p</em></span>
                     <span class="song-status" id="status-air">Not performed</span>
                 </div>
                 <div class="song-card" id="card-mountain" onclick="selectSong('mountain')">
                     <span class="song-icon">👑</span>
                     <span class="song-name">Mountain King</span>
-                    <span class="song-desc">A relentless test of tempo and command.</span>
+                    <span class="song-desc">Thrilling crescendo finale.<br/><br/><em>Target Tempo: Presto</em><br/><em>Target Dynamic: f</em></span>
                     <span class="song-status" id="status-mountain">Not performed</span>
                 </div>
             </div>
@@ -711,24 +552,23 @@
         <!-- GAMEPLAY -->
         <div class="screen" id="gameplay-screen">
             <div id="piece-header">
-                <span id="piece-title">Piece Name</span>
+                <div class="title-group">
+                    <span id="piece-title">Piece Name</span>
+                    <span id="target-tempo-header" class="badge-header">Target Tempo: Andante</span>
+                    <span id="target-dynamic-header" class="badge-header">Target Dynamic: mf</span>
+                </div>
                 <span id="piece-status">Performing...</span>
             </div>
 
-            <!-- Progress Bar -->
             <div id="progress-wrap">
                 <span id="progress-label">Piece Progress</span>
-                <div id="progress-track">
-                    <div id="progress-fill"></div>
-                </div>
+                <div id="progress-track"><div id="progress-fill"></div></div>
                 <span id="progress-pct">0%</span>
                 <button id="pause-btn" onclick="togglePause()" title="Pause/Resume">⏸</button>
             </div>
 
             <div class="layout-split">
                 <div class="main-column">
-
-                    <!-- Status Grid: Audience + Synergy (from newer game) -->
                     <div id="status-grid-container">
                         <div class="status-row row-audience">
                             <div class="row-header">Audience<br>Reception</div>
@@ -737,7 +577,7 @@
                                 <div class="cell" id="aud-cell-1">Checking Programs</div>
                                 <div class="cell" id="aud-cell-2">Polite Attention</div>
                                 <div class="cell" id="aud-cell-3">Utterly Captivated</div>
-                                <div class="cell" id="aud-cell-4">Ecstatic Frenzy</div>
+                                <div class="cell" id="aud-cell-4">Blissful Nirvana</div>
                             </div>
                         </div>
                         <div class="status-row row-synergy">
@@ -752,37 +592,56 @@
                         </div>
                     </div>
 
- <!-- Arch Layout Stage -->
-        <div id="stage-container">
-                    
-          <!-- Outer Arch: Musicians -->
-          <div class="arch-layer" id="musicians-layer"></div>
-          
-          <!-- Inner Arch: Tempo Control -->
-          <div class="arch-layer" id="tempo-layer"></div>
-          
-          <!-- Podium: Center Bottom -->
-                        <div id="podium">
-                                  <svg class="baton-svg" viewBox="0 0 20 100" width="28" height="84">
-              <line x1="10" y1="5" x2="10" y2="80" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
-              <rect x="7" y="70" width="6" height="25" rx="3" fill="#c4a35a" />
-              <rect x="6" y="75" width="8" height="2" fill="#8a6327" />
-            </svg>
+                    <div id="stage-container">
+                        <div id="timeline-container">
+                            <span class="timeline-label">Anticipation Focus</span>
+                            <div id="timeline-target-zone"></div>
+                            <div id="timeline-events-layer"></div>
+                        </div>
+                        <div class="orchestra-grid">
+                            <div class="tempo-column">
+                                <div class="tempo-col-title">
+                                    Conductor's Podium
+                                </div>
+                                <div id="tempo-buttons-container"></div>
+                                <div class="podium-crescendo-row">
+                                    <button class="podium-cres-btn decresc" onclick="stepAllDynamics(-1)">&lt;&lt; Decresc</button>
+                                    <button class="podium-cres-btn cresc" onclick="stepAllDynamics(1)">Cresc &gt;&gt;</button>
+                                </div>
+                                <div class="podium-bottom-panel" id="podium-bottom-panel" onclick="handleBatonClick()">
+                                    <div class="podium-bottom-title">Maestro's<br>Momentum</div>
+                                    <div class="podium-prestige-display" id="podium-prestige-display">Prestige I</div>
+                                    <div class="podium-momentum-wrap">
+                                        <div class="podium-momentum-bar" id="podium-momentum-bar"></div>
+                                    </div>
+                                    <div class="baton-frame" id="baton-frame">
+                                        <svg class="baton-svg podium-baton-icon" id="podium-baton" viewBox="0 0 20 100" width="38" height="180">
+                                            <title>Master Baton Override: Fully charges over time or via passage completion. Click when glowing yellow, then click an instrument's fatigue bar to reduce its fatigue by 50%!</title>
+                                            <line x1="10" y1="5" x2="10" y2="70" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+                                            <rect x="7" y="60" width="6" height="25" rx="3" fill="#c4a35a" />
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="instruments-column">
+                                <div class="instruments-col-title">
+                                    <span>Orchestra Sections</span>
+                                </div>
+                                <div class="instruments-grid-wrap" id="musicians-grid-container"></div>
+                            </div>
                         </div>
                     </div>
 
-                    <div id="status">Raise your baton...</div>
-                    <div id="audio-status"></div>
+                    <div id="status">Balance section dynamics and respond to cues...</div>
                 </div>
 
-                <!-- Guide Column -->
-                <div class="guide-column" id="guide-column">
+                <div class="guide-column collapsed" id="guide-column">
                     <div class="guide-header">
-                        <span>📖 Section Guide</span>
+                        <span>📖 Key Guide</span>
                     </div>
                     <div class="guide-list" id="guide-content"></div>
                 </div>
-                <button id="guide-toggle" onclick="toggleGuide()" title="Toggle Section Guide">➖</button>
+                <button id="guide-toggle" onclick="toggleGuide()" title="Expand Key Guide">➕</button>
             </div>
         </div>
 
@@ -803,105 +662,111 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@tonejs/midi@2.0.28/build/Midi.min.js">
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@tonejs/midi@2.0.28/build/Midi.min.js"></script>
     <script>
-        // ═══════════════════════════════════════════════════════════════════════════════
-        //  CONFIGURATION
-        // ═══════════════════════════════════════════════════════════════════════════════
-
         const SECTION_GUIDES = {
-            'Concertmaster': { desc: 'Anchor of strings. Low fatigue, high pitch stability.' },
-            'Violins': { desc: 'Melodic lead. Rest often to prevent sharp drift.' },
-            'Violin I': { desc: 'High voice. Exhausts quickly at fast tempos.' },
-            'Violin II': { desc: 'Harmonic support. Needs steady pacing.' },
-            'Violas': { desc: 'Warm middle voices. Smooths ensemble blend.' },
-            'Cellos': { desc: 'Deep resonance. Crucial for locked-in groove.' },
-            'Bass': { desc: 'Rhythmic foundation. Pushes momentum but tires fast.' },
-            'Harpsichord': { desc: 'Bright continuo. Drives rhythmic clarity.' },
+            'Concertmaster': { desc: 'Anchor of strings. Low fatigue, high stability.' },
+            'Violins': { desc: 'Melodic lead. Balance dynamics carefully.' },
+            'Violin I': { desc: 'High voice. Exhausts quickly at fff.' },
+            'Violin II': { desc: 'Harmonic support. Steady pacing required.' },
+            'Violas': { desc: 'Warm middle voices. Smooth ensemble blend.' },
+            'Cellos': { desc: 'Deep resonance. Crucial for rich sound.' },
+            'Bass': { desc: 'Rhythmic foundation. Heavy energy drain at high volume.' },
+            'Harpsichord': { desc: 'Bright continuo. Crisp rhythmic pulse.' },
             'Continuo': { desc: 'Harmonic pulse. Keeps timing secure.' },
-            'Bassoon': { desc: 'Woodwind anchor. Subtle but vital to morale.' },
-            'Horns': { desc: 'Brassy projection. Excites crowd when fresh.' },
+            'Bassoon': { desc: 'Woodwind anchor. Vital to tone morale.' },
+            'Horns': { desc: 'Brassy projection. Massive impact at fff.' },
             'Percussion': { desc: 'Relentless drive. Burns stamina rapidly.' },
-            'Brass': { desc: 'Powerful weight. Fast fatigue, massive impact.' },
+            'Brass': { desc: 'Powerful weight. High fatigue gain.' },
             'Viola': { desc: 'Warm middle voice. Smooths ensemble blend.' },
-            'Cello': { desc: 'Deep resonance. Crucial for locked-in groove.' }
+            'Cello': { desc: 'Deep resonance. Crucial for rich sound.' }
         };
 
         const TEMPOS = [
-            { id: 'largo', name: 'Largo', val: 70 },
-            { id: 'andante', name: 'Andante', val: 85 },
-            { id: 'moderato', name: 'Moderato', val: 100 },
-            { id: 'allegro', name: 'Allegro', val: 115 },
-            { id: 'presto', name: 'Presto', val: 130 }
+            { id: 'presto', name: 'Presto (130)', val: 130, color: 'linear-gradient(145deg, #7f1d1d, #ef4444)' },
+            { id: 'allegro', name: 'Allegro (115)', val: 115, color: 'linear-gradient(145deg, #7c2d12, #f97316)' },
+            { id: 'moderato', name: 'Moderato (100)', val: 100, color: 'linear-gradient(145deg, #713f12, #eab308)' },
+            { id: 'andante', name: 'Andante (85)', val: 85, color: 'linear-gradient(145deg, #3f6212, #84cc16)' },
+            { id: 'largo', name: 'Largo (70)', val: 70, color: 'linear-gradient(145deg, #14532d, #22c55e)' }
+        ];
+
+        const FATIGUE_COLORS = [
+            '#22c55e', '#84cc16', '#a3e635', '#eab308', '#f97316',
+            '#ea580c', '#ef4444', '#dc2626', '#be185d', '#9d174d'
+        ];
+
+        const DYNAMIC_LEVELS = [
+            { id: 'rest', name: '&#x1D13D;', mult: 0.0, energyCost: 0 },
+            { id: 'p', name: 'p', mult: 0.4, energyCost: 1 },
+            { id: 'mf', name: 'mf', mult: 0.8, energyCost: 2 },
+            { id: 'f', name: 'f', mult: 1.3, energyCost: 3 },
+            { id: 'fff', name: 'fff', mult: 1.8, energyCost: 5 }
         ];
 
         const PIECES = {
             canon: {
                 name: "Canon in D",
                 file: "assets/canonvar.mid",
+                targetTempo: 85,
+                targetDyn: 2,
+                targetDynName: "mf",
                 sections: [
-                    { id: 'sec_0', name: 'Concertmaster', icon: '🎻', impactType: 'tuning' },
-                    { id: 'sec_1', name: 'Violas', icon: '🎻', impactType: 'tuning' },
-                    { id: 'sec_2', name: 'Cellos', icon: '🎻', impactType: 'tuning' },
-                    { id: 'sec_3', name: 'Bass', icon: '🎻', impactType: 'dynamics' },
-                    { id: 'sec_4', name: 'Harpsichord', icon: '🎹', impactType: 'dynamics' }
+                    { id: 'sec_0', name: 'Concertmaster', icon: '🎻' },
+                    { id: 'sec_1', name: 'Violas', icon: '🎻' },
+                    { id: 'sec_2', name: 'Cellos', icon: '🎻' },
+                    { id: 'sec_3', name: 'Bass', icon: '🎻' },
+                    { id: 'sec_4', name: 'Harpsichord', icon: '🎹' }
                 ]
             },
             air: {
                 name: "Air on the G String",
                 file: "assets/Bach-Air_on_G_String_BWV1068.mid",
+                targetTempo: 70,
+                targetDyn: 1,
+                targetDynName: "p",
                 sections: [
-                    { id: 'sec_0', name: 'Violin I', icon: '🎻', impactType: 'tuning' },
-                    { id: 'sec_1', name: 'Violin II', icon: '🎻', impactType: 'tuning' },
-                    { id: 'sec_2', name: 'Viola', icon: '🎻', impactType: 'tuning' },
-                    { id: 'sec_3', name: 'Cello', icon: '🎻', impactType: 'tuning' },
-                    { id: 'sec_4', name: 'Bass', icon: '🎻', impactType: 'dynamics' },
-                    { id: 'sec_5', name: 'Harpsichord', icon: '🎹', impactType: 'dynamics' }
+                    { id: 'sec_0', name: 'Violin I', icon: '🎻' },
+                    { id: 'sec_1', name: 'Violin II', icon: '🎻' },
+                    { id: 'sec_2', name: 'Viola', icon: '🎻' },
+                    { id: 'sec_3', name: 'Cello', icon: '🎻' },
+                    { id: 'sec_4', name: 'Bass', icon: '🎻' },
+                    { id: 'sec_5', name: 'Harpsichord', icon: '🎹' }
                 ]
             },
             mountain: {
                 name: "Mountain King",
                 file: "assets/In the hall of the Mountain King.mid",
+                targetTempo: 130,
+                targetDyn: 3,
+                targetDynName: "f",
                 sections: [
-                    { id: 'sec_0', name: 'Cellos', icon: '🎻', impactType: 'tuning' },
-                    { id: 'sec_1', name: 'Violins', icon: '🎻', impactType: 'tuning' },
-                    { id: 'sec_2', name: 'Bassoon', icon: '🎶', impactType: 'tuning' },
-                    { id: 'sec_3', name: 'Horns', icon: '🎺', impactType: 'dynamics' },
-                    { id: 'sec_4', name: 'Percussion', icon: '🥁', impactType: 'dynamics' },
-                    { id: 'sec_5', name: 'Brass', icon: '🎺', impactType: 'dynamics' }
+                    { id: 'sec_0', name: 'Cellos', icon: '🎻' },
+                    { id: 'sec_1', name: 'Violins', icon: '🎻' },
+                    { id: 'sec_2', name: 'Bassoon', icon: '🎶' },
+                    { id: 'sec_3', name: 'Horns', icon: '🎺' },
+                    { id: 'sec_4', name: 'Percussion', icon: '🥁' },
+                    { id: 'sec_5', name: 'Brass', icon: '🎺' }
                 ]
             }
         };
 
         let concert = { completed: new Set(), currentPiece: null, totalAttempts: 0 };
         let state = null;
-        let guideOpen = true;
+        let guideOpen = false;
         let isPaused = false;
+        let selectingTargetForBaton = false;
 
-        // ═══════════════════════════════════════════════════════════════════════════════
-        //  AUDIO ENGINE
-        // ═══════════════════════════════════════════════════════════════════════════════
-
-        let audioCtx = null,
-            masterCompressor = null,
-            midiData = null,
-            trackGains = [];
-        let isPlaying = false,
-            scheduledNotes = [],
-            useFallbackAudio = false;
-        let songStartTime = 0,
-            totalSongDuration = 0;
+        let audioCtx = null, masterCompressor = null, midiData = null, trackGains = [];
+        let isPlaying = false, scheduledNotes = [], useFallbackAudio = false;
+        let playbackStartTime = 0, playbackStartMidiTime = 0, totalSongDuration = 0;
+        let gameInterval = null;
 
         async function initAudio() {
             if (!audioCtx) {
                 audioCtx = new(window.AudioContext || window.webkitAudioContext)();
                 masterCompressor = audioCtx.createDynamicsCompressor();
                 masterCompressor.threshold.setValueAtTime(-15, audioCtx.currentTime);
-                masterCompressor.knee.setValueAtTime(30, audioCtx.currentTime);
                 masterCompressor.ratio.setValueAtTime(12, audioCtx.currentTime);
-                masterCompressor.attack.setValueAtTime(0, audioCtx.currentTime);
-                masterCompressor.release.setValueAtTime(0.25, audioCtx.currentTime);
                 masterCompressor.connect(audioCtx.destination);
             }
             if (audioCtx.state === 'suspended') await audioCtx.resume();
@@ -910,187 +775,259 @@
         async function loadMidi(pieceKey) {
             try {
                 const midi = await Midi.fromUrl(PIECES[pieceKey].file);
-                midiData = midi;
-                totalSongDuration = midi.duration;
-                useFallbackAudio = false;
+                midiData = midi; totalSongDuration = midi.duration; useFallbackAudio = false;
                 return midi;
             } catch (e) {
-                useFallbackAudio = true;
-                totalSongDuration = 90;
-                return null;
+                useFallbackAudio = true; totalSongDuration = 90; return null;
             }
         }
 
-        function playMidi(startTimeOffset = 0) {
+        function playMidi(startMidiTime = 0) {
             if (!midiData || !audioCtx) return;
-            stopAudio();
-
-            const now = audioCtx.currentTime;
-            if (startTimeOffset === 0) songStartTime = now;
-
-            const sections = PIECES[concert.currentPiece].sections;
-            scheduledNotes = [];
-            trackGains = [];
+            scheduledNotes.forEach(osc => { try { osc.stop(); } catch (e) {} });
+            scheduledNotes = []; trackGains = [];
+            let tempoMultiplier = state.tempo / 100;
+            playbackStartTime = audioCtx.currentTime; playbackStartMidiTime = startMidiTime;
+            let now = playbackStartTime;
 
             midiData.tracks.forEach((track, trackIndex) => {
-                if (!sections[trackIndex]) return;
-
-                const gainNode = audioCtx.createGain();
-                gainNode.connect(masterCompressor);
-                gainNode.gain.value = 0;
+                if (!PIECES[concert.currentPiece].sections[trackIndex]) return;
+                const gainNode = audioCtx.createGain(); gainNode.connect(masterCompressor); gainNode.gain.value = 0;
                 trackGains[trackIndex] = gainNode;
 
                 track.notes.forEach(note => {
-                    if (note.time >= startTimeOffset) {
-                        const osc = audioCtx.createOscillator();
-                        const noteGain = audioCtx.createGain();
+                    if (note.time >= startMidiTime) {
+                        const osc = audioCtx.createOscillator(); const noteGain = audioCtx.createGain();
                         osc.frequency.value = 440 * Math.pow(2, (note.midi - 69) / 12);
-                        osc.type = sections[trackIndex].impactType === 'tuning' ? 'sawtooth' : 'triangle';
+                        osc.type = 'triangle';
+                        let adjustedTime = (note.time - startMidiTime) / tempoMultiplier;
+                        let scheduleTime = now + adjustedTime;
 
-                        const scheduleTime = now + (note.time - startTimeOffset);
                         noteGain.gain.setValueAtTime(0, scheduleTime);
-                        noteGain.gain.linearRampToValueAtTime(0.8, scheduleTime + 0.03);
-                        noteGain.gain.exponentialRampToValueAtTime(0.001, scheduleTime + note.duration);
-
-                        osc.connect(noteGain);
-                        noteGain.connect(gainNode);
-                        osc.start(scheduleTime);
-                        osc.stop(scheduleTime + note.duration + 0.05);
+                        noteGain.gain.linearRampToValueAtTime(0.8, scheduleTime + (0.03 / tempoMultiplier));
+                        noteGain.gain.exponentialRampToValueAtTime(0.001, scheduleTime + (note.duration / tempoMultiplier));
+                        osc.connect(noteGain); noteGain.connect(gainNode);
+                        osc.start(scheduleTime); osc.stop(scheduleTime + (note.duration / tempoMultiplier) + 0.05);
                         scheduledNotes.push(osc);
                     }
                 });
             });
-
-            isPlaying = true;
-            updateAudioLevels();
-            requestAnimationFrame(updateProgressUI);
+            isPlaying = true; updateAudioLevels(); requestAnimationFrame(updateProgressUI);
         }
 
-        function startFallbackAudio() {
+        function startFallbackAudio(startMidiTime = 0) {
             if (!audioCtx) return;
-            stopAudio();
-            songStartTime = audioCtx.currentTime;
-            const freqs = [261.63, 329.63, 392.00, 493.88];
-            trackGains = [];
+            scheduledNotes.forEach(osc => { try { osc.stop(); } catch (e) {} });
+            scheduledNotes = []; trackGains = [];
+            let tempoMultiplier = state.tempo / 100;
+            playbackStartTime = audioCtx.currentTime; playbackStartMidiTime = startMidiTime;
+            let now = playbackStartTime;
 
             PIECES[concert.currentPiece].sections.forEach((sec, idx) => {
-                const gainNode = audioCtx.createGain();
-                gainNode.connect(masterCompressor);
-                gainNode.gain.value = 0;
+                const gainNode = audioCtx.createGain(); gainNode.connect(masterCompressor); gainNode.gain.value = 0;
                 trackGains[idx] = gainNode;
 
-                const startTime = audioCtx.currentTime;
                 for (let i = 0; i < 200; i++) {
-                    const time = startTime + i * 0.5;
-                    const freq = freqs[(Math.floor(time * 2) + idx) % freqs.length];
-                    const osc = audioCtx.createOscillator();
-                    const noteGain = audioCtx.createGain();
-                    osc.frequency.value = freq * (1 + idx * 0.2);
-                    osc.type = 'triangle';
+                    const noteStartMidi = i * 0.5;
+                    if (noteStartMidi + 0.4 < startMidiTime) continue;
+                    let adjustedTime = Math.max(0, (noteStartMidi - startMidiTime) / tempoMultiplier);
+                    let time = now + adjustedTime;
 
+                    const osc = audioCtx.createOscillator(); const noteGain = audioCtx.createGain();
+                    osc.frequency.value = 261.63 * (1 + idx * 0.2); osc.type = 'triangle';
                     noteGain.gain.setValueAtTime(0, time);
-                    noteGain.gain.linearRampToValueAtTime(0.7, time + 0.05);
-                    noteGain.gain.exponentialRampToValueAtTime(0.001, time + 0.4);
-                    osc.connect(noteGain);
-                    noteGain.connect(gainNode);
-                    osc.start(time);
-                    osc.stop(time + 0.45);
+                    noteGain.gain.linearRampToValueAtTime(0.7, time + (0.05 / tempoMultiplier));
+                    noteGain.gain.exponentialRampToValueAtTime(0.001, time + (0.4 / tempoMultiplier));
+                    osc.connect(noteGain); noteGain.connect(gainNode);
+                    osc.start(time); osc.stop(time + (0.4 / tempoMultiplier) + 0.05);
                     scheduledNotes.push(osc);
                 }
             });
-
-            isPlaying = true;
-            updateAudioLevels();
-            requestAnimationFrame(updateProgressUI);
+            isPlaying = true; updateAudioLevels(); requestAnimationFrame(updateProgressUI);
         }
 
         function stopAudio() {
             scheduledNotes.forEach(osc => { try { osc.stop(); } catch (e) {} });
-            scheduledNotes = [];
-            trackGains = [];
-            isPlaying = false;
+            scheduledNotes = []; trackGains = []; isPlaying = false;
         }
 
         function updateAudioLevels() {
             if (!isPlaying || !audioCtx || !state) return;
             trackGains.forEach((gainNode, idx) => {
                 if (!gainNode) return;
-                const secId = PIECES[concert.currentPiece].sections[idx].id;
-                const volume = state.activeSections.has(secId) ? 1.0 : 0;
-                gainNode.gain.setTargetAtTime(volume, audioCtx.currentTime, 0.15);
+                const sec = state.sections[idx];
+                const dynObj = DYNAMIC_LEVELS[sec.dynLevel];
+                gainNode.gain.setTargetAtTime(dynObj.mult, audioCtx.currentTime, 0.15);
             });
+        }
+
+        function generateTimelineEvents() {
+            const evs = [];
+            const piece = PIECES[concert.currentPiece];
+            const targetDyn = piece.targetDyn;
+            
+            for (let t = 12; t < totalSongDuration; t += 18) {
+                const sec = piece.sections[Math.floor(Math.random() * piece.sections.length)];
+                const possibleDyns = [0, 1, 2, 3, 4].filter(d => d !== targetDyn);
+                const targetDynIdx = possibleDyns[Math.floor(Math.random() * possibleDyns.length)];
+                const dynObj = DYNAMIC_LEVELS[targetDynIdx];
+                
+                evs.push({ 
+                    id: `ev_${t}`, 
+                    type: 'cue', 
+                    time: t, 
+                    targetId: sec.id, 
+                    targetDyn: targetDynIdx, 
+                    label: dynObj.name,
+                    triggered: false,
+                    processed: false 
+                });
+            }
+            state.timelineEvents = evs;
         }
 
         function updateProgressUI() {
             if (isPlaying && !isPaused && totalSongDuration > 0 && state && !state.gameOver && !state.won) {
-                let elapsed = audioCtx.currentTime - songStartTime;
-                let progress = Math.min(100, (elapsed / totalSongDuration) * 100);
+                let now = audioCtx.currentTime;
+                let elapsedRealTime = now - playbackStartTime;
+                let tempoMultiplier = state.tempo / 100;
+                let currentMidiTime = playbackStartMidiTime + (elapsedRealTime * tempoMultiplier);
+                state.currentMidiTime = currentMidiTime;
 
+                let progress = Math.min(100, (currentMidiTime / totalSongDuration) * 100);
                 const progFill = document.getElementById('progress-fill');
                 progFill.style.width = progress + '%';
                 document.getElementById('progress-pct').textContent = Math.round(progress) + '%';
+                progFill.style.backgroundColor = state.audienceScore <= 20 ? '#ef4444' : state.audienceScore <= 50 ? '#facc15' : '#84cc16';
 
-                const getIndex = (val) => Math.min(4, Math.max(0, Math.floor(val / 20.001)));
-                const audIndex = getIndex(state.audienceScore);
+                const tlContainer = document.getElementById('timeline-events-layer');
+                tlContainer.innerHTML = '';
+                const windowWidth = document.getElementById('timeline-container').clientWidth || 800;
+                const zoneLeft = 190;
+                const zoneWidth = 120;
+                const zoneRight = zoneLeft + zoneWidth;
+                const zoneCenter = zoneLeft + (zoneWidth / 2);
+                const lookaheadWindow = 6.0;
+                const pxPerSec = (windowWidth - zoneCenter) / lookaheadWindow;
 
-                if (audIndex <= 1) {
-                    progFill.style.backgroundColor = '#ef4444';
-                } else if (audIndex === 2) {
-                    progFill.style.backgroundColor = '#facc15';
-                } else {
-                    progFill.style.backgroundColor = '#84cc16';
-                }
+                state.timelineEvents.forEach(ev => {
+                    let timeDiff = ev.time - currentMidiTime;
+                    let xPos = zoneCenter + (timeDiff * pxPerSec);
 
-                if (elapsed >= totalSongDuration) {
-                    winPiece();
-                    return;
-                }
+                    const sec = state.sections.find(s => s.id === ev.targetId);
+                    const secName = sec ? sec.name : '';
+
+                    const el = document.createElement('div');
+                    el.className = `timeline-event cue`;
+                    el.style.left = `${xPos}px`;
+                    el.innerHTML = `<span class="timeline-section-label">${secName}</span><span>${ev.label}</span>`;
+                    tlContainer.appendChild(el);
+
+                    let boxWidth = el.offsetWidth || 100;
+                    let rightEdge = xPos + boxWidth;
+
+                    if (xPos < -200) {
+                        ev.processed = true;
+                        el.remove();
+                        return;
+                    }
+
+                    if (rightEdge <= zoneLeft && !ev.triggered && !ev.processed) {
+                        ev.processed = true;
+                        state.audienceScore = Math.max(0, state.audienceScore - 20);
+                        setStatus(`❌ Missed cue! Audience reception hurt.`);
+                    }
+
+                    let isInsideZone = (xPos <= zoneRight && rightEdge >= zoneLeft);
+                    if (isInsideZone) {
+                        el.style.borderColor = '#22c55e';
+                        el.style.color = '#86efac';
+                        el.style.background = '#162a1e';
+                        el.style.boxShadow = '0 0 15px rgba(34, 197, 94, 0.9)';
+
+                        if (!ev.triggered && !ev.processed) {
+                            const targetSec = state.sections.find(s => s.id === ev.targetId);
+                            if (targetSec && targetSec.dynLevel === ev.targetDyn) {
+                                ev.triggered = true;
+                                ev.processed = true;
+                                triggerSectionChallenge(ev.targetId, ev.targetDyn);
+                                state.synergyScore = Math.min(100, state.synergyScore + 6);
+                                setTimeout(() => {
+                                    setStatus(`⚡ Perfect timing! ${targetSec.name} solo initiated.`);
+                                }, 0);
+                            }
+                        }
+                    }
+                });
+
+                if (currentMidiTime >= totalSongDuration) { winPiece(); return; }
             }
-            if (state && !state.gameOver && !state.won) {
-                requestAnimationFrame(updateProgressUI);
-            }
+            if (state && !state.gameOver && !state.won) requestAnimationFrame(updateProgressUI);
         }
 
-        // ═══════════════════════════════════════════════════════════════════════════════
-        //  GAME MECHANICS
-        // ═══════════════════════════════════════════════════════════════════════════════
+        function checkAndTriggerCue(secId, level) {
+            if (!state) return;
+            const windowWidth = document.getElementById('timeline-container').clientWidth || 800;
+            const zoneLeft = 190;
+            const zoneWidth = 120;
+            const zoneRight = zoneLeft + zoneWidth;
+            const zoneCenter = zoneLeft + (zoneWidth / 2);
+            const lookaheadWindow = 6.0;
+            const pxPerSec = (windowWidth - zoneCenter) / lookaheadWindow;
 
-        let gameInterval = null;
+            state.timelineEvents.forEach(ev => {
+                if (ev.processed || ev.triggered) return;
+                if (ev.targetId === secId && ev.targetDyn === level) {
+                    let timeDiff = ev.time - state.currentMidiTime;
+                    let xPos = zoneCenter + (timeDiff * pxPerSec);
+
+                    if (xPos <= zoneRight && xPos >= zoneLeft) {
+                        ev.triggered = true;
+                        ev.processed = true;
+                        const sec = state.sections.find(s => s.id === secId);
+                        triggerSectionChallenge(ev.targetId, ev.targetDyn);
+                        state.synergyScore = Math.min(100, state.synergyScore + 6);
+                        setStatus(`⚡ Perfect timing! ${sec ? sec.name : ''} solo initiated.`);
+                    }
+                }
+            });
+        }
 
         async function selectSong(key) {
             if (concert.completed.has(key)) return;
-            concert.currentPiece = key;
-            concert.totalAttempts++;
+            concert.currentPiece = key; concert.totalAttempts++;
             const pieceDef = PIECES[key];
-
+            
             state = {
-                tempo: 100,
-                audienceScore: 50,
-                synergyScore: 50,
-                sections: pieceDef.sections.map(s => ({ ...s, fatigue: 0 })),
-                activeSections: new Set([pieceDef.sections[0].id]),
-                activeEvent: null,
-                eventTimer: 0,
-                gameOver: false,
-                won: false,
-                timeElapsed: 0
+                tempo: pieceDef.targetTempo,
+                audienceScore: 50, synergyScore: 50,
+                dynamicPoints: 100,
+                batonEnergy: 0,
+                prestigeLevel: Math.min(5, 1 + concert.completed.size),
+                sections: pieceDef.sections.map(s => ({ ...s, dynLevel: pieceDef.targetDyn, fatigue: 0, inChallenge: false, challengeTimer: 0 })),
+                gameOver: false, won: false, timeElapsed: 0, currentMidiTime: 0, timelineEvents: []
             };
 
-            document.getElementById('piece-title').textContent = pieceDef.name;
+            selectingTargetForBaton = false;
+
+            document.getElementById('piece-title').innerHTML = `${pieceDef.name}`;
+            const tempoObj = TEMPOS.find(t => t.val === pieceDef.targetTempo);
+            const tempoLabelName = tempoObj ? tempoObj.name.split(' ')[0] : pieceDef.targetTempo;
+            document.getElementById('target-tempo-header').textContent = `Target Tempo: ${tempoLabelName}`;
+            document.getElementById('target-dynamic-header').textContent = `Target Dynamic: ${pieceDef.targetDynName}`;
             document.getElementById('piece-status').textContent = 'Performing...';
             document.getElementById('pause-btn').textContent = '⏸';
             document.getElementById('pause-btn').classList.remove('paused');
             isPaused = false;
 
-            renderArchLayouts(pieceDef.sections);
+            renderGridStage(pieceDef.sections);
             populateGuideContent(pieceDef.sections);
-            updateUI();
-            showScreen('gameplay-screen');
-            setStatus('🎼 Concertmaster begins...');
+            updateUI(); showScreen('gameplay-screen');
+            setStatus('🎼 Instruments started on target dynamic. Balance section dynamics and respond to cues...');
 
-            await initAudio();
-            await loadMidi(key);
-            useFallbackAudio ? startFallbackAudio() : playMidi(0);
+            await initAudio(); await loadMidi(key);
+            generateTimelineEvents();
+            useFallbackAudio ? startFallbackAudio(0) : playMidi(0);
             gameInterval = setInterval(tick, 1000);
         }
 
@@ -1098,20 +1035,14 @@
             if (!state || state.gameOver || state.won) return;
             isPaused = !isPaused;
             const btn = document.getElementById('pause-btn');
-
             if (isPaused) {
-                btn.textContent = '▶';
-                btn.classList.add('paused');
-                btn.title = 'Resume';
-                setStatus('⏸ PAUSED');
-                if (audioCtx) audioCtx.suspend();
+                btn.textContent = '▶'; btn.classList.add('paused'); setStatus('⏸ PAUSED');
+                if (audioCtx) audioCtx.suspend(); 
             } else {
-                btn.textContent = '⏸';
-                btn.classList.remove('paused');
-                btn.title = 'Pause';
-                setStatus('🎼 Performing...');
+                btn.textContent = '⏸'; btn.classList.remove('paused'); setStatus('🎼 Performing...');
                 if (audioCtx) audioCtx.resume();
             }
+            updateUI();
         }
 
         function toggleGuide() {
@@ -1119,304 +1050,270 @@
             const col = document.getElementById('guide-column');
             const btn = document.getElementById('guide-toggle');
             if (guideOpen) {
-                col.classList.remove('collapsed');
-                btn.textContent = '➖';
-                btn.title = 'Collapse Section Guide';
+                col.classList.remove('collapsed'); btn.textContent = '➖'; btn.title = 'Collapse Key Guide';
             } else {
-                col.classList.add('collapsed');
-                btn.textContent = '➕';
-                btn.title = 'Expand Section Guide';
+                col.classList.add('collapsed'); btn.textContent = '➕'; btn.title = 'Expand Key Guide';
             }
         }
 
         function setTempo(val) {
             if (!state || state.gameOver || state.won || isPaused) return;
+            let currentMidiTime = playbackStartMidiTime + ((audioCtx.currentTime - playbackStartTime) * (state.tempo / 100));
             state.tempo = val;
+            useFallbackAudio ? startFallbackAudio(currentMidiTime) : playMidi(currentMidiTime);
             updateUI();
         }
 
-        function toggleSection(secId) {
+        function setSectionDynamic(secId, level) {
             if (!state || state.gameOver || state.won || isPaused) return;
-
-            if (state.activeEvent && state.activeEvent.targetId === secId) {
-                resolveEvent(true);
-                return;
+            const sec = state.sections.find(s => s.id === secId);
+            if (sec && !sec.inChallenge) {
+                sec.dynLevel = level;
+                updateAudioLevels();
+                checkAndTriggerCue(secId, level);
+                updateUI();
             }
+        }
 
-            if (state.activeSections.has(secId)) state.activeSections.delete(secId);
-            else state.activeSections.add(secId);
-
+        function stepAllDynamics(direction) {
+            if (!state || state.gameOver || state.won || isPaused) return;
+            state.sections.forEach(sec => {
+                if (!sec.inChallenge) {
+                    let nextLvl = Math.max(0, Math.min(4, sec.dynLevel + direction));
+                    sec.dynLevel = nextLvl;
+                    checkAndTriggerCue(sec.id, nextLvl);
+                }
+            });
             updateAudioLevels();
             updateUI();
+        }
+
+        function handleBatonClick() {
+            if (!state || state.batonEnergy < 100 || isPaused) return;
+            selectingTargetForBaton = !selectingTargetForBaton;
+            if (selectingTargetForBaton) {
+                setStatus("✨ Baton Override Active! Click an instrument's fatigue bar to reduce its fatigue by 50%.");
+            } else {
+                setStatus("Baton target selection canceled.");
+            }
+            updateUI();
+        }
+
+        function handleFatigueClick(secId) {
+            if (selectingTargetForBaton && state && state.batonEnergy >= 100) {
+                const sec = state.sections.find(s => s.id === secId);
+                if (sec) {
+                    sec.fatigue = Math.max(0, Math.floor(sec.fatigue * 0.5));
+                    state.batonEnergy = 0;
+                    selectingTargetForBaton = false;
+                    setStatus(`✨ Rested ${sec.name}! Fatigue reduced by 50%.`);
+                    updateUI();
+                }
+            }
+        }
+
+        function triggerSectionChallenge(secId, targetDyn) {
+            if (!state || state.gameOver || state.won) return;
+            const sec = state.sections.find(s => s.id === secId);
+            if (!sec) return;
+            
+            sec.inChallenge = true;
+            sec.challengeTimer = 5;
+            sec.dynLevel = targetDyn;
+            updateAudioLevels();
+            setStatus(`🎶 Passage challenge active for ${sec.name}! Sustaining high volume for 5s...`);
+            updateUI();
+        }
+
+        function resolveSectionChallenge(sec, success) {
+            sec.inChallenge = false;
+            const dynStrip = document.getElementById(`dyn-strip-${sec.id}`);
+            if (success) {
+                sec.fatigue = Math.max(0, Math.floor(sec.fatigue * 0.5));
+                sec.dynLevel = PIECES[concert.currentPiece].targetDyn;
+                state.batonEnergy = 100;
+                state.audienceScore = Math.min(100, state.audienceScore + 15);
+                
+                let oldPrestige = state.prestigeLevel;
+                state.prestigeLevel = Math.min(5, state.prestigeLevel + 0.2);
+                if (Math.floor(state.prestigeLevel) > Math.floor(oldPrestige)) {
+                    triggerPrestigeAnimation();
+                }
+
+                updateAudioLevels();
+                if (dynStrip) {
+                    dynStrip.classList.add('challenge-success');
+                    setTimeout(() => dynStrip.classList.remove('challenge-success'), 1200);
+                }
+                setStatus(`✨ ${sec.name} successfully completed the passage! Set to ${PIECES[concert.currentPiece].targetDynName}, 50% fatigue reduction, wand charged!`);
+            } else {
+                sec.fatigue = 100;
+                sec.dynLevel = 0;
+                state.audienceScore = Math.max(0, state.audienceScore - 25);
+                updateAudioLevels();
+                if (dynStrip) {
+                    dynStrip.classList.add('challenge-fail');
+                    setTimeout(() => dynStrip.classList.remove('challenge-fail'), 1200);
+                }
+                setStatus(`❌ ${sec.name} reached fatigue limit and failed the passage! Audience reception dropped.`);
+            }
+            updateUI();
+        }
+
+        function triggerPrestigeAnimation() {
+            const disp = document.getElementById('podium-prestige-display');
+            if (disp) {
+                disp.classList.add('prestige-animate');
+                setTimeout(() => disp.classList.remove('prestige-animate'), 800);
+            }
         }
 
         function tick() {
             if (!state || state.gameOver || state.won || isPaused) return;
             state.timeElapsed++;
 
-            const fatigueMultiplier = Math.max(0.5, (state.tempo / 100));
+            const pieceDef = PIECES[concert.currentPiece];
+            const targetTempo = pieceDef.targetTempo;
+            const targetDyn = pieceDef.targetDyn;
+            const tempoDiff = Math.abs(state.tempo - targetTempo);
+            
+            if (tempoDiff === 0) {
+                state.audienceScore = Math.min(100, state.audienceScore + 0.5);
+            } else {
+                const penalty = (tempoDiff / 10);
+                state.audienceScore = Math.max(0, state.audienceScore - penalty);
+            }
+
+            let tickPointsChange = 0;
+            state.sections.forEach(sec => {
+                let diff = targetDyn - sec.dynLevel;
+                if (sec.dynLevel === targetDyn) {
+                    tickPointsChange += 2;
+                } else if (diff > 0) {
+                    tickPointsChange -= diff;
+                } else {
+                    tickPointsChange -= Math.abs(diff);
+                }
+            });
+
+            state.dynamicPoints = Math.max(0, Math.min(200, state.dynamicPoints + tickPointsChange));
+
+            if (state.dynamicPoints >= 140) {
+                state.audienceScore = Math.min(100, state.audienceScore + 2.0);
+            } else if (state.dynamicPoints >= 100) {
+                state.audienceScore = Math.min(100, state.audienceScore + 0.8);
+            } else if (state.dynamicPoints >= 60) {
+                state.audienceScore = Math.max(0, state.audienceScore - 0.5);
+            } else {
+                state.audienceScore = Math.max(0, state.audienceScore - 2.5);
+            }
+
+            if (state.synergyScore >= 80) {
+                state.audienceScore = Math.min(100, state.audienceScore + 1.5);
+            } else if (state.synergyScore <= 30) {
+                state.audienceScore = Math.max(0, state.audienceScore - 1.0);
+            }
+
             let totalFatigue = 0;
 
             state.sections.forEach(sec => {
-                if (state.activeSections.has(sec.id)) {
-                    sec.fatigue = Math.min(100, sec.fatigue + (2.0 * fatigueMultiplier));
+                const dynObj = DYNAMIC_LEVELS[sec.dynLevel];
+                if (sec.dynLevel === 0) {
+                    sec.fatigue = Math.max(0, sec.fatigue - 10);
                 } else {
-                    sec.fatigue = Math.max(0, sec.fatigue - 3.5);
+                    const fatigueDrain = dynObj.energyCost * 1.3 * (state.tempo / 100);
+                    sec.fatigue = Math.min(100, sec.fatigue + fatigueDrain);
                 }
+
+                if (sec.inChallenge) {
+                    sec.challengeTimer--;
+                    if (sec.fatigue >= 100) {
+                        resolveSectionChallenge(sec, false);
+                    } else if (sec.challengeTimer <= 0) {
+                        resolveSectionChallenge(sec, true);
+                    }
+                }
+
                 totalFatigue += sec.fatigue;
             });
 
             const avgFatigue = totalFatigue / state.sections.length;
+            if (avgFatigue > 60) state.synergyScore -= 3.5;
+            else if (avgFatigue < 35) state.synergyScore += 1;
 
-            if (avgFatigue > 60) {
-                state.synergyScore -= 2.5;
-            } else if (avgFatigue < 30 && state.activeSections.size > 0) {
-                state.synergyScore += 1.5;
-            }
+            if (state.audienceScore > 60) state.synergyScore += 1;
+            
             state.synergyScore = Math.max(0, Math.min(100, state.synergyScore));
-
-            if (state.synergyScore < 40) {
-                state.audienceScore -= 2;
-            } else if (state.synergyScore > 60 && state.activeSections.size > 1) {
-                state.audienceScore += 1.5;
-            }
-            if (state.activeSections.size === 0) state.audienceScore -= 3;
             state.audienceScore = Math.max(0, Math.min(100, state.audienceScore));
 
-            handleEvents();
+            if (state.audienceScore >= 45 && state.batonEnergy < 100 && !selectingTargetForBaton) {
+                state.batonEnergy = Math.min(100, state.batonEnergy + 4);
+            }
 
             if (state.audienceScore <= 0) { losePiece(); return; }
             updateUI();
         }
 
-        // ═══════════════════════════════════════════════════════════════════════════════
-        //  RANDOM EVENTS
-        // ═══════════════════════════════════════════════════════════════════════════════
+        function renderGridStage(sections) {
+            const tempoContainer = document.getElementById('tempo-buttons-container');
+            tempoContainer.innerHTML = TEMPOS.map(t => `
+                <button class="grid-tempo-btn" id="tempo-${t.val}" style="background: ${t.color};" onclick="setTempo(${t.val})">${t.name}</button>
+            `).join('');
 
-        function handleEvents() {
-            if (state.activeEvent) {
-                state.eventTimer--;
-                if (state.eventTimer <= 0) {
-                    resolveEvent(false);
-                }
-                return;
-            }
-            if (Math.random() < 0.035) triggerRandomEvent();
+            const musContainer = document.getElementById('musicians-grid-container');
+            musContainer.innerHTML = sections.map(s => `
+                <div class="musician" id="mus-${s.id}">
+                    <div class="mus-header">
+                        <div class="mus-title-group">
+                            <span class="icon">${s.icon}</span>
+                            <span class="name">${s.name}</span>
+                        </div>
+                        <button class="btn-rest" id="dyn-btn-${s.id}-0" onclick="setSectionDynamic('${s.id}', 0)" title="Rest / Tacet">&#x1D13D;</button>
+                    </div>
+                    <div class="dyn-strip" id="dyn-strip-${s.id}">
+                        <button class="dyn-btn btn-p" id="dyn-btn-${s.id}-1" onclick="setSectionDynamic('${s.id}', 1)">p</button>
+                        <button class="dyn-btn btn-mf" id="dyn-btn-${s.id}-2" onclick="setSectionDynamic('${s.id}', 2)">mf</button>
+                        <button class="dyn-btn btn-f" id="dyn-btn-${s.id}-3" onclick="setSectionDynamic('${s.id}', 3)">f</button>
+                        <button class="dyn-btn btn-fff" id="dyn-btn-${s.id}-4" onclick="setSectionDynamic('${s.id}', 4)">fff</button>
+                    </div>
+                    <div class="fatigue-container" id="fatigue-box-${s.id}" onclick="handleFatigueClick('${s.id}')">
+                        ${Array.from({length: 10}, (_, i) => `<div class="fatigue-segment" id="fatigue-${s.id}-${i}"></div>`).join('')}
+                    </div>
+                </div>
+            `).join('');
         }
-
-        function triggerRandomEvent() {
-            const active = state.sections.filter(s => state.activeSections.has(s.id));
-            const inactive = state.sections.filter(s => !state.activeSections.has(s.id));
-
-            const pool = [];
-            if (inactive.length > 0) pool.push('cue');
-            if (active.length > 0) pool.push('broken', 'sharp', 'lost');
-            if (active.some(s => s.name === 'Brass' || s.name === 'Horns' || s.name === 'Percussion')) pool.push('loud');
-
-            if (pool.length === 0) return;
-            const type = pool[Math.floor(Math.random() * pool.length)];
-
-            let ev = {};
-            if (type === 'cue') {
-                const target = inactive[Math.floor(Math.random() * inactive.length)];
-                ev = {
-                    type: 'cue',
-                    targetId: target.id,
-                    msg: 'SOLO CUE',
-                    badgeClass: '',
-                    time: 12,
-                    successMsg: `Brilliant! The ${target.name} enters perfectly.`,
-                    failMsg: `Missed cue — the ${target.name} sat out their solo.`,
-                    penalty: 12,
-                    bonus: 18
-                };
-            } else if (type === 'dragging') {
-                const target = active[Math.floor(Math.random() * active.length)];
-                ev = {
-                    type: 'dragging',
-                    targetId: target.id,
-                    msg: 'Dragging!',
-                    badgeClass: 'danger',
-                    time: 8,
-                    successMsg: `Quick save!`,
-                    failMsg: `SThe ${target.name} played is dragging behind.`,
-                    penalty: 18,
-                    bonus: 12
-                };
-            } else if (type === 'sharp') {
-                const target = active[Math.floor(Math.random() * active.length)];
-                ev = {
-                    type: 'sharp',
-                    targetId: target.id,
-                    msg: 'SHARP!',
-                    badgeClass: 'danger',
-                    time: 7,
-                    successMsg: `Tuned down! The ${target.name} corrected pitch.`,
-                    failMsg: `Ouch! The ${target.name} went sharp and ruined the chord.`,
-                    penalty: 14,
-                    bonus: 10
-                };
-            } else if (type === 'lost') {
-                const target = active[Math.floor(Math.random() * active.length)];
-                ev = {
-                    type: 'lost',
-                    targetId: target.id,
-                    msg: 'LOST!',
-                    badgeClass: 'danger',
-                    time: 9,
-                    successMsg: `Found the beat! The ${target.name} is back on track.`,
-                    failMsg: `The ${target.name} lost their place and threw off the section.`,
-                    penalty: 16,
-                    bonus: 12
-                };
-            } else if (type === 'loud') {
-                const target = active.find(s => s.name === 'Brass' || s.name === 'Horns' || s.name === 'Percussion') ||
-                active[0];
-                ev = {
-                    type: 'loud',
-                    targetId: target.id,
-                    msg: 'TOO LOUD',
-                    badgeClass: 'danger',
-                    time: 8,
-                    successMsg: `Reined in! The ${target.name} balanced their volume.`,
-                    failMsg: `The ${target.name} overpowered the ensemble.`,
-                    penalty: 15,
-                    bonus: 10
-                };
-            }
-
-            state.activeEvent = ev;
-            state.eventTimer = ev.time;
-            renderEventBadge(ev);
-            setStatus(ev.type === 'cue' ? `🌟 ${ev.msg}: Click the highlighted section!` :
-                `⚠️ ${ev.msg}: Click the highlighted section!`);
-        }
-
-        function renderEventBadge(ev) {
-            document.querySelectorAll('.event-badge').forEach(b => b.remove());
-            const el = document.getElementById(`mus-${ev.targetId}`);
-            if (!el) return;
-            const badge = document.createElement('div');
-            badge.className = 'event-badge ' + ev.badgeClass;
-            badge.id = 'event-badge';
-            badge.textContent = ev.msg;
-            el.appendChild(badge);
-
-            el.style.borderColor = ev.type === 'cue' ? '#c4a35a' : '#ef4444';
-            el.style.boxShadow = ev.type === 'cue' ? '0 0 20px rgba(196,163,90,0.4)' : '0 0 20px rgba(239,68,68,0.4)';
-        }
-
-        function clearEventBadge() {
-            document.querySelectorAll('.event-badge').forEach(b => b.remove());
-            if (!state) return;
-            state.sections.forEach(s => {
-                const el = document.getElementById(`mus-${s.id}`);
-                if (el) { el.style.borderColor = '';
-                    el.style.boxShadow = ''; }
-            });
-        }
-
-        function resolveEvent(success) {
-            if (!state || !state.activeEvent) return;
-            const ev = state.activeEvent;
-            clearEventBadge();
-
-            if (success) {
-                if (ev.type === 'cue') {
-                    state.activeSections.add(ev.targetId);
-                    const sec = state.sections.find(s => s.id === ev.targetId);
-                    if (sec) sec.fatigue = Math.max(0, sec.fatigue - 20);
-                } else {
-                    state.activeSections.delete(ev.targetId);
-                }
-                state.synergyScore = Math.min(100, state.synergyScore + ev.bonus);
-                state.audienceScore = Math.min(100, state.audienceScore + (ev.bonus * 0.5));
-                setStatus(ev.successMsg);
-            } else {
-                state.synergyScore -= ev.penalty;
-                state.audienceScore -= (ev.penalty * 0.7);
-                setStatus(ev.failMsg);
-            }
-
-            updateAudioLevels();
-            state.activeEvent = null;
-            state.eventTimer = 0;
-            updateUI();
-        }
-
-// ═════════════════════════════════════════════════════════════════════════════
-//  UI & ARCH STAGE LAYOUT
-// ═════════════════════════════════════════════════════════════════════════════
-
-function renderArchLayouts(sections) {
-  const musLayer = document.getElementById('musicians-layer');
-  const tempoLayer = document.getElementById('tempo-layer');
-  
-  // Calculate Outer Arch (Musicians)
-  const outerRadius = 220;
-  const outerAngles = [];
-  const totalMus = sections.length;
-  // Spread evenly from -65 to +65 degrees
-  for(let i=0; i<totalMus; i++) {
-      let angle = totalMus === 1 ? 0 : -65 + (130 / (totalMus - 1)) * i;
-      outerAngles.push(angle * (Math.PI / 180));
-  }
-
-  musLayer.innerHTML = sections.map((s, i) => {
-    const x = Math.sin(outerAngles[i]) * outerRadius;
-    const y = Math.cos(outerAngles[i]) * outerRadius; // y points up from bottom
-    return `
-      <div class="musician arch-item" id="mus-${s.id}" onclick="toggleSection('${s.id}')" title="${s.name}"
-           style="bottom: ${y + 30}px; left: calc(50% + ${x}px)">
-        <span class="mute-icon">🔇</span>
-        <span class="icon">${s.icon}</span>
-        <span class="name">${s.name}</span>
-        <div class="fatigue-wrap"><div class="fatigue-bar" id="fatigue-${s.id}"></div></div>
-      </div>
-    `;
-  }).join('');
-
-  // Calculate Inner Arch (Tempo Settings)
-  const innerRadius = 100;
-  const innerAngles = [-60, -40, -8, 40, 60].map(deg => deg * (Math.PI / 180));
-  
-  tempoLayer.innerHTML = TEMPOS.map((t, i) => {
-    const x = Math.sin(innerAngles[i]) * innerRadius;
-    const y = Math.cos(innerAngles[i]) * innerRadius;
-    return `
-      <button class="tempo-btn arch-item" id="tempo-${t.val}" onclick="setTempo(${t.val})"
-              style="bottom: ${y + 20}px; left: calc(50% + ${x}px)">
-        ${t.name}
-      </button>
-    `;
-  }).join('');
-}
 
         function populateGuideContent(sections) {
             const content = document.getElementById('guide-content');
             const uniqueNames = [...new Set(sections.map(s => s.name))];
-            content.innerHTML = uniqueNames.map(name => {
+            
+            let html = '<div style="font-size:0.75rem; color:#8a8a9a; font-weight:800; text-transform:uppercase; margin-bottom:2px;">Dynamic Levels</div>';
+            const dynamicExplanations = [
+                { symbol: '&#x1D13D;', name: 'Rest / Tacet', desc: 'Stops playing entirely to shed accumulated fatigue rapidly.' },
+                { symbol: 'p', name: 'Piano (Soft)', desc: 'Gentle projection with minimal energy consumption.' },
+                { symbol: 'mf', name: 'Mezzo-Forte (Moderate)', desc: 'Balanced volume and stable, sustainable stamina use.' },
+                { symbol: 'f', name: 'Forte (Loud)', desc: 'Strong projection; increases fatigue drain quickly.' },
+                { symbol: 'fff', name: 'Fortissimo (Max)', desc: 'Maximum sonic power; burns stamina rapidly.' }
+            ];
+            html += dynamicExplanations.map(d => `
+                <div class="guide-item">
+                    <span class="guide-icon" style="font-size:1.1rem; min-width:24px; text-align:center; color:#facc15; font-weight:bold; display:flex; align-items:center; justify-content:center;">${d.symbol}</span>
+                    <div class="guide-item-text"><strong>${d.name}</strong>${d.desc}</div>
+                </div>
+            `).join('');
+
+            html += '<div style="font-size:0.75rem; color:#8a8a9a; font-weight:800; text-transform:uppercase; margin-top:8px; margin-bottom:2px;">Instruments</div>';
+            html += uniqueNames.map(name => {
                 const sectionData = sections.find(s => s.name === name);
                 const info = SECTION_GUIDES[name] || { desc: 'Key member of the ensemble.' };
-                return `
-              <div class="guide-item">
-                <span class="guide-icon">${sectionData.icon}</span>
-                <div class="guide-item-text">
-                  <strong>${name}</strong>
-                  ${info.desc}
-                </div>
-              </div>
-            `;
+                return `<div class="guide-item"><span class="guide-icon">${sectionData.icon}</span><div class="guide-item-text"><strong>${name}</strong>${info.desc}</div></div>`;
             }).join('');
+
+            content.innerHTML = html;
         }
 
         function updateUI() {
             if (!state) return;
-
-            if (state.activeEvent) {
-                const badge = document.getElementById('event-badge');
-                if (badge) badge.textContent = state.activeEvent.msg + ' (' + state.eventTimer + 's)';
-            }
 
             TEMPOS.forEach(t => {
                 const btn = document.getElementById(`tempo-${t.val}`);
@@ -1428,130 +1325,115 @@ function renderArchLayouts(sections) {
             const synIndex = getIndex(state.synergyScore);
 
             for (let i = 0; i < 5; i++) {
-                let cell = document.getElementById(`aud-cell-${i}`);
-                cell.className = 'cell';
-                if (i === audIndex) {
-                    cell.classList.add('active');
-                    if (i <= 1) cell.classList.add('bad');
-                    else if (i === 2) cell.classList.add('mid');
-                    else cell.classList.add('good');
-                }
-            }
-            for (let i = 0; i < 5; i++) {
-                let cell = document.getElementById(`syn-cell-${i}`);
-                cell.className = 'cell';
-                if (i === synIndex) {
-                    cell.classList.add('active');
-                    if (i <= 1) cell.classList.add('bad');
-                    else if (i === 2) cell.classList.add('mid');
-                    else cell.classList.add('good');
-                }
+                let cellA = document.getElementById(`aud-cell-${i}`); cellA.className = 'cell';
+                if (i === audIndex) { cellA.classList.add('active'); cellA.classList.add(i <= 1 ? 'bad' : i === 2 ? 'mid' : 'good'); }
+                let cellS = document.getElementById(`syn-cell-${i}`); cellS.className = 'cell';
+                if (i === synIndex) { cellS.classList.add('active'); cellS.classList.add(i <= 1 ? 'bad' : i === 2 ? 'mid' : 'good'); }
             }
 
             state.sections.forEach(s => {
-                const el = document.getElementById(`mus-${s.id}`);
-                const fBar = document.getElementById(`fatigue-${s.id}`);
-                if (el) {
-                    el.classList.toggle('active', state.activeSections.has(s.id));
-                    fBar.style.width = s.fatigue + '%';
-                    if (s.fatigue < 50) fBar.style.background = '#4ade80';
-                    else if (s.fatigue < 85) fBar.style.background = '#facc15';
-                    else fBar.style.background = '#ef4444';
+                const dynStrip = document.getElementById(`dyn-strip-${s.id}`);
+                const fatigueBox = document.getElementById(`fatigue-box-${s.id}`);
+                if (dynStrip) {
+                    dynStrip.classList.toggle('in-challenge', s.inChallenge);
+                }
+                if (fatigueBox) {
+                    fatigueBox.classList.toggle('selectable-target', selectingTargetForBaton);
+                }
+
+                for (let lvl = 0; lvl <= 4; lvl++) {
+                    const btn = document.getElementById(`dyn-btn-${s.id}-${lvl}`);
+                    if (btn) {
+                        btn.classList.toggle('active', s.dynLevel === lvl);
+                    }
+                }
+
+                const activeSegments = Math.floor(s.fatigue / 10);
+                for (let i = 0; i < 10; i++) {
+                    const seg = document.getElementById(`fatigue-${s.id}-${i}`);
+                    if (seg) {
+                        if (i < activeSegments) {
+                            seg.style.background = FATIGUE_COLORS[i];
+                            seg.style.boxShadow = `0 0 4px ${FATIGUE_COLORS[i]}`;
+                        } else {
+                            seg.style.background = '#1e1e2e';
+                            seg.style.boxShadow = 'none';
+                        }
+                    }
                 }
             });
 
-            document.querySelector('.baton-svg').style.animationDuration = (200 / state.tempo) + 's';
+            const batonIcon = document.getElementById('podium-baton');
+            const batonFrame = document.getElementById('baton-frame');
+            const bottomPanel = document.getElementById('podium-bottom-panel');
+            const momentumBar = document.getElementById('podium-momentum-bar');
+            const prestigeDisplay = document.getElementById('podium-prestige-display');
+
+            const isReady = state.batonEnergy >= 100;
+
+            if (batonIcon) {
+                batonIcon.classList.toggle('ready', isReady);
+            }
+
+            if (batonFrame) batonFrame.classList.toggle('ready', isReady);
+            if (bottomPanel) bottomPanel.classList.toggle('ready-highlight', isReady);
+            if (momentumBar) momentumBar.style.width = `${state.batonEnergy}%`;
+            if (prestigeDisplay) {
+                const romanNumerals = ['I', 'II', 'III', 'IV', 'V'];
+                let pLevelIdx = Math.min(4, Math.max(0, Math.floor(state.prestigeLevel) - 1));
+                prestigeDisplay.textContent = `Prestige ${romanNumerals[pLevelIdx]}`;
+            }
         }
 
         function setStatus(msg) { document.getElementById('status').textContent = msg; }
-
-        function showScreen(id) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-        }
+        function showScreen(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
 
         function updateSelectionScreen() {
             const completed = concert.completed.size;
             document.getElementById('concert-progress').textContent = `Concert progress: ${completed} / 3`;
             ['canon', 'air', 'mountain'].forEach(key => {
-                const card = document.getElementById(`card-${key}`);
-                const status = document.getElementById(`status-${key}`);
+                const card = document.getElementById(`card-${key}`); const status = document.getElementById(`status-${key}`);
                 if (concert.completed.has(key)) {
                     card.classList.add('completed');
                     if (!card.querySelector('.checkmark')) card.innerHTML += '<span class="checkmark">✓</span>';
-                    status.textContent = 'Completed';
-                    status.style.background = '#2a5a3a';
-                    status.style.color = '#a0d4a0';
+                    status.textContent = 'Completed'; status.style.background = '#2a5a3a'; status.style.color = '#a0d4a0';
                 }
             });
             if (completed === 3) setTimeout(() => showScreen('concert-complete-screen'), 500);
         }
 
-        // ═══════════════════════════════════════════════════════════════════════════════
-        //  WIN / LOSE
-        // ═══════════════════════════════════════════════════════════════════════════════
-
         function winPiece() {
             if (state.won) return;
-            state.won = true;
-            clearInterval(gameInterval);
-            setStatus("✨ A triumphant finale! ✨");
-            document.getElementById('piece-status').textContent = 'Finale!';
-
-            stopAudio();
+            state.won = true; clearInterval(gameInterval); stopAudio();
+            setStatus("✨ A triumphant finale! ✨"); document.getElementById('piece-status').textContent = 'Finale!';
             setTimeout(() => {
                 concert.completed.add(concert.currentPiece);
-                document.getElementById('result-title').textContent = '👏 Bravo!';
-                document.getElementById('result-title').style.color = '#a0c4a0';
-                document.getElementById('result-desc').textContent =
-                    `${PIECES[concert.currentPiece].name} was performed beautifully.`;
-                document.getElementById('result-stats').innerHTML =
-                    `⏱️ Time: ${state.timeElapsed}s &nbsp;|&nbsp; 👥 Audience: ${Math.round(state.audienceScore)}% &nbsp;|&nbsp; 🎼 Synergy: ${Math.round(state.synergyScore)}%`;
-                document.getElementById('result-btn').textContent = 'Back to Program';
-                document.getElementById('result-btn').onclick = returnToSelection;
+                document.getElementById('result-title').textContent = '👏 Bravo!'; document.getElementById('result-title').style.color = '#a0c4a0';
+                document.getElementById('result-desc').textContent = `${PIECES[concert.currentPiece].name} was performed beautifully.`;
+                document.getElementById('result-stats').innerHTML = `⏱️ Time: ${state.timeElapsed}s &nbsp;|&nbsp; 👥 Audience: ${Math.round(state.audienceScore)}% &nbsp;|&nbsp; 🎼 Synergy: ${Math.round(state.synergyScore)}%`;
+                document.getElementById('result-btn').textContent = 'Back to Program'; document.getElementById('result-btn').onclick = returnToSelection;
                 showScreen('result-screen');
             }, 2500);
         }
 
         function losePiece() {
-            state.gameOver = true;
-            clearInterval(gameInterval);
-            stopAudio();
-            document.getElementById('result-title').textContent = '😞 The audience left.';
-            document.getElementById('result-title').style.color = '#c4a0a0';
-            document.getElementById('result-desc').textContent =
-                `${PIECES[concert.currentPiece].name} dissolved into chaos.`;
-            document.getElementById('result-stats').innerHTML =
-                `⏱️ Time survived: ${state.timeElapsed}s &nbsp;|&nbsp; 👥 Audience: ${Math.round(state.audienceScore)}%`;
-            document.getElementById('result-btn').textContent = 'Try Again';
-            document.getElementById('result-btn').onclick = () => selectSong(concert.currentPiece);
+            state.gameOver = true; clearInterval(gameInterval); stopAudio();
+            document.getElementById('result-title').textContent = '😞 The audience left.'; document.getElementById('result-title').style.color = '#c4a0a0';
+            document.getElementById('result-desc').textContent = `${PIECES[concert.currentPiece].name} dissolved into chaos.`;
+            document.getElementById('result-stats').innerHTML = `⏱️ Time survived: ${state.timeElapsed}s &nbsp;|&nbsp; 👥 Audience: ${Math.round(state.audienceScore)}%`;
+            document.getElementById('result-btn').textContent = 'Try Again'; document.getElementById('result-btn').onclick = () => selectSong(concert.currentPiece);
             showScreen('result-screen');
         }
 
-        function returnToSelection() {
-            stopAudio();
-            clearInterval(gameInterval);
-            isPaused = false;
-            showScreen('song-select-screen');
-            updateSelectionScreen();
-        }
-
+        function returnToSelection() { stopAudio(); clearInterval(gameInterval); isPaused = false; showScreen('song-select-screen'); updateSelectionScreen(); }
         function resetConcert() {
-            concert.completed.clear();
-            concert.currentPiece = null;
-            concert.totalAttempts = 0;
+            concert.completed.clear(); concert.currentPiece = null; concert.totalAttempts = 0;
             ['canon', 'air', 'mountain'].forEach(key => {
-                const card = document.getElementById(`card-${key}`);
-                card.classList.remove('completed');
-                const check = card.querySelector('.checkmark');
-                if (check) check.remove();
-                const status = document.getElementById(`status-${key}`);
-                status.textContent = 'Not performed';
-                status.style.background = '#2a2a3a';
-                status.style.color = '#8a8a9a';
+                const card = document.getElementById(`card-${key}`); card.classList.remove('completed');
+                const check = card.querySelector('.checkmark'); if (check) check.remove();
+                const status = document.getElementById(`status-${key}`); status.textContent = 'Not performed'; status.style.background = '#2a2a3a'; status.style.color = '#8a8a9a';
             });
-            showScreen('song-select-screen');
-            updateSelectionScreen();
+            showScreen('song-select-screen'); updateSelectionScreen();
         }
 
         updateSelectionScreen();
